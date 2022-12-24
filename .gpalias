@@ -1,0 +1,623 @@
+x;s;uf;t;
+score(j) = return(round(3+7*1.1^-j));
+
+
+apolybasic(pol) =
+{
+  local(rts, ans=1);
+  rts=polroots(pol);
+  
+for(i=1,length(rts)-1,for(j=i+1,length(rts), temp=rts; temp[i]=0; temp[j]=0; temp=select(z->z!=0,temp);
+	gt=1; for(k=1,#temp,gt*=(x-temp[k]));	
+	ans *= (x^2-poldisc(gt))
+
+));
+  return(cleanpol(ans));
+}
+
+apoly(pol) =
+{
+  local(p1,p2);
+  p1=pol;
+  while(issquarefree(p2=apolybasic(p1))==0, p1=poltschirnhaus(pol));
+  return(p2);
+}
+
+galtord(pol)={
+
+return(extern(Str("magmagp \"galtord("pol")\"")));
+
+}
+
+res3(f,n) = return(extern(Str("magmagp \"res3("f","n")\"")));
+
+
+subfieldstoplot2(f,n,p) = return(extern(Str("magmagp \"subfieldstoplot2("f","n","p")\"")));
+
+res1(pol,holder,p,q,prec,a,b,c)={
+
+return(extern(Str("magmagp \"res1("pol","holder","p","q","prec","a","b","c")\"")));
+
+}
+
+invslist(n1,d1,n2,d2)={
+
+return(extern(Str("magmagp \"invslist("n1","d1","n2","d2")\"")));
+
+}
+
+permslist(n1,d1,n2,d2)={
+
+return(extern(Str("magmagp \"permslist("n1","d1","n2","d2")\"")));
+
+}
+
+
+galgroups(n,d,p)={
+
+return(extern(Str("magmagp \"galgroups("n","d","p","0")\"")));
+
+}
+
+
+pgalt(f,p,prec)={
+
+return(extern(Str("magmagp \"pgalt("f","p","prec")\"")));
+
+}
+
+
+exactpgalt(f,p)={
+
+return(extern(Str("magmagp \"exactpgalt("f","p")\"")));
+
+}
+
+factorsgal(f,size,p,prec)={
+
+return(extern(Str("magmagp \"Factorsgal("f","size","p","prec")\"")));
+
+}
+
+factors(f,p,prec)={
+
+return(extern(Str("magmagp \"Factors("f","p","prec")\"")));
+
+}
+
+pfactors(f,p,prec)={
+
+return(extern(Str("magmagp \"pAdicFactors("f","p","prec")\"")));
+
+}
+
+pdisc2(f,p)={
+
+return(extern(Str("magmagp \"pdisc2("f","p")\"")));
+
+}
+
+pdiscgal(f,size,p)={
+
+return(extern(Str("magmagp \"pdiscgal("f","size","p")\"")));
+
+}
+
+tpoly2(g)={
+local(pol,h,pol1,q);
+pol=polresultant(subst(g,x,y),subst(g,x,x-y),y);
+h=pol/(2^(poldegree(g))*subst(g,x,x/2));
+pol1=polresultant(subst(g,x,y),subst(h,x,x-y),y);
+q=(3^(poldegree(g))*subst(g,x,x/3)/polresultant(subst(g,x,y),subst(g,x,x-2*y),y )  )^2*pol1;
+
+return(q);
+};
+
+memberq(entry, lis,bnd=-1) = local(b);b=length(lis);if(bnd>-1,b=bnd);for(j=1,b,if(lis[j]==entry,return(j)));return(0);
+assoc(entry, lis, bnd=-1) = return(memberq(entry,lis,bnd));
+
+galt(pol) = if(poldegree(pol)<12, return(polgalois(pol)[3]), return(extern(Str("magmagp \"galt("pol")\""))));
+
+
+newlars2(expon,list,f,p)={
+
+return(extern(Str("magmagp \"newlars2("expon","list","f","p")\"")));
+
+}
+
+inertiamatch(f,u,p)={
+list=extern(Str("magmagp \"inertiamatch2("f","u")\"")); 
+if(#list!=0, 
+
+for(i=1,#list,
+	
+	if(pdiscf(list[i][1],p)==0,
+		if(list[i][3]==1, return([list[i][2],"t",[list[i][4],list[i][5]],0])   ); 
+
+		if(list[i][3]==0, return([list[i][2],"i",[list[i][4],list[i][5]],0])   );
+
+	);	
+);
+);
+};
+
+pras(lis) = return(vector(length(lis),h,polredabs(lis[h])));
+ppras(lis) = return(vector(length(lis),h,prepolred(lis[h])));
+upras(lis) = return(eval(Set(pras(lis))));
+uppras(lis) = return(eval(Set(ppras(lis))));
+gals(lis) = return(apply(polgalois, lis));
+galts(lis) = return(apply(galt,lis));
+ramps(f) = return(factor(abs(nfdisc(f)))[,1]~);
+rd(f) = return(abs(nfdisc(f))^(1/poldegree(f)));
+ipd(pol,p)= return(idealprimedec(nfinit([pol,[p]]),p));
+
+t2(pol) = return(norml2(polroots(pol)));
+t20(pol) = return(t2(subst(pol,x,x-polcoeff(pol,poldegree(pol)-1)/poldegree(pol))));
+
+prd(f,rmps) = return(prod(j=1,#rmps, rmps[j]^pdiscf(f,rmps[j]))^(1/poldegree(f)));
+
+union(lis) = return(Set(lis));
+
+sm(s1,s2) = return(setminus(Set(s1),Set(s2)));
+sd(s1,s2) = my(ss1=Set(s1),ss2=Set(s2)); return(concat(setminus(ss1,ss2),setminus(ss2,ss1)));
+
+take(lis, n) =
+{
+  my(len);
+  len = #lis;
+  if(n>=0, return(vector(n,h,lis[h])), return(vector(-n,h,lis[len+n+h])));
+}
+
+drop(lis, n) = if(n>=0, return(take(lis, -(#lis-n))), return(take(lis,#lis+n)));
+last(lis) = return(lis[#lis]);
+
+/* delete the n-th entry from a list */
+del(lis,n) = return(vector(#lis-1,h,if(h<n, lis[h], lis[h+1])));
+
+mult(lis) =
+{
+  local(ans1=[], ans2=[], k);
+
+  for(j=1,length(lis), if((k=assoc(lis[j], ans1)), ans2[k]+=1,
+    ans1=concat(ans1,[lis[j]]);
+    ans2=concat(ans2,[1])));
+  return(vector(length(ans1),h,[ans1[h], ans2[h]]));
+}
+
+see(lis) = for(j=1,length(lis),print(lis[j]));
+seec(lis) = for(j=1,length(lis),print(j,"  ",lis[j]));
+
+/* lift of factorpadic */
+lfactorpadic(pol,p,ex) = return(lift(Mod(1,p^ex)*factorpadic(pol,p,ex)));
+
+concat2(lis) =
+{
+  local(ans, s);
+  s=sum(j=1,#lis, #lis[j]);
+  ans=vector(s,h,0);
+  s=0;
+  for(j=1,#lis, for(k=1,#lis[j],
+    s++;
+    ans[s] = lis[j][k]));
+  return(ans);
+}
+
+/* Add up the elements of a list */
+
+total(lis) = return(sum(j=1,length(lis),lis[j]));
+
+/* For hard to polredabs polys */
+
+prepolred(pol)=
+{
+  local(pr, ml2, ans,tmp,orig);
+  pr = polred(pol,1);
+  ans=[];
+  orig=norml2(polroots(pol));
+  for(j=1,#pr, if(poldegree(pr[j]) == poldegree(pol), ans=concat(ans,[pr[j]])));
+  if(#ans==0, print("prepolred found none");return(pol));
+  pr=ans;
+  ml2= norml2(polroots(pr[1])); ans = pr[1];
+  for(j=2,#pr,
+    tmp=norml2(polroots(pr[j]));
+    if(tmp<ml2, ml2=tmp; ans=pr[j]));
+  if(ml2>orig, ans=pol);
+  return(ans);
+}
+
+
+/* Take a quartic and compute its resolvant cubic */
+cubicresolvent(pol) =
+{
+  local(b,c,d,e);
+
+  b=polcoeff(pol,3);
+  c=polcoeff(pol,2);
+  d=polcoeff(pol,1);
+  e=polcoeff(pol,0);
+  return(x^3-c*x^2+(b*d-4*e)*x-b^2*e+4*c*e-d^2);
+}
+
+ppoly(pol)=return(polresultant(subst(pol,x,y), subst(pol,x,x-y),y));
+mpoly(pol)=return(polresultant(subst(pol,x,y), subst(pol,x,x+y),y)/x^poldegree(pol));
+
+/* Sextic twinning */
+
+from6rts(r) = return(r[1]^2*r[5]^2*(r[2]*r[4] + r[3]*r[6]) + \
+  r[2]^2*r[4]^2*(r[1]*r[5] + r[3]*r[6]) + \
+  r[3]^2*r[6]^2*(r[1]*r[5] + r[2]*r[4]) + \
+  r[1]^2*r[6]^2*(r[2]*r[5] + r[3]*r[4]) + \
+  r[2]^2*r[5]^2*(r[1]*r[6] + r[3]*r[4]) + \
+  r[3]^2*r[4]^2*(r[1]*r[6] + r[2]*r[5]) + \
+  r[1]^2*r[3]^2*(r[2]*r[6] + r[4]*r[5]) + \
+  r[2]^2*r[6]^2*(r[1]*r[3] + r[4]*r[5]) + \
+  r[4]^2*r[5]^2*(r[1]*r[3] + r[2]*r[6]) + \
+  r[1]^2*r[4]^2*(r[2]*r[3] + r[5]*r[6]) + \
+  r[2]^2*r[3]^2*(r[1]*r[4] + r[5]*r[6]) + \
+  r[5]^2*r[6]^2*(r[1]*r[4] + r[2]*r[3]) + \
+  r[1]^2*r[2]^2*(r[3]*r[5] + r[4]*r[6]) + \
+  r[3]^2*r[5]^2*(r[1]*r[2] + r[4]*r[6]) + \
+  r[4]^2*r[6]^2*(r[1]*r[2] + r[3]*r[5]));
+
+twin(pol) = 
+{
+  local(rts, rts2, rtsc);
+  rts = polroots(pol);
+  rtsc = rts;
+  rts2 = vector(6,h,0);
+  rts2[1] = from6rts(rts);
+  for(j=2,6, rts=rtsc;
+    tmp=rts[1];
+    rts[1]=rts[j];
+    rts[j]=tmp;
+    rts2[j] = from6rts(rts));
+  return(prod(j=1,6,x-rts2[j]));
+}
+
+/* Same, but does it until the result is separable */
+
+mytwin(pol) = 
+{
+  local(ttmp, tmp);
+  tmp=pol;
+  while(issquarefree(ttmp=round(twin(tmp)))==0, tmp=poltschirnhaus(pol));
+  return(ttmp);
+}
+
+/* My version of map, first argument is a function of z in quotes */
+
+/*
+mapz(fiffer,lis)=(forbarbaz1(z)=eval(Str(fiffer)));vector(length(lis),h,forbarbaz1(lis[h]))
+
+cmapz(fiffer,lis)=
+{
+  local(tmp, ntmp);
+  (forbarbaz1(z)=eval(Str(fiffer)));
+  tmp=vector(length(lis),h,0);
+  ntmp=#tmp;
+  for(j=1,ntmp, print("j = ", j, " of ",ntmp);
+     tmp[j] = forbarbaz1(lis[j]));
+  return(tmp);
+}
+*/
+
+/* map(f,v)=vector(#v,i,f(v[i])) */
+
+/* My version of select, first argument is a function of z in quotes */
+
+/*
+selectz(lis,f)=
+{
+  local(ans,cnt=0,tmp);
+  (forbar2bazzz(z)=eval(Str(f)));
+  tmp=vector(length(lis),h,forbar2bazzz(lis[h]));
+  for(j=1,length(lis), if(tmp[j], cnt++));
+  ans=vector(cnt,h,0);
+  cnt=0;
+  for(j=1,length(lis), if(tmp[j], cnt++;ans[cnt]=lis[j]));
+  ans
+}
+*/
+
+/*
+select(lis,f)=
+{
+  local(ans,cnt=0,tmp);
+  tmp=vector(length(lis),h,f(lis[h]));
+  for(j=1,length(lis), if(tmp[j], cnt++));
+  ans=vector(cnt,h,0);
+  cnt=0;
+  for(j=1,length(lis), if(tmp[j], cnt++;ans[cnt]=lis[j]));
+  ans
+}
+*/
+
+/*
+seldeg(lis,n)=
+{
+  local(ans,cnt=0,tmp);
+  tmp=vector(length(lis),h,poldegree(lis[h])==n);
+  for(j=1,length(lis), if(tmp[j], cnt++));
+  ans=vector(cnt,h,0);
+  cnt=0;
+  for(j=1,length(lis), if(tmp[j], cnt++;ans[cnt]=lis[j]));
+  ans
+}
+*/
+seldeg(lis,n) = return(select(z->poldegree(z)==n, lis));
+
+flatten(li) =
+{
+  local(ans=[]);
+  for(j=1,length(li),ans=concat(ans,li[j]));
+  return(ans);
+}
+
+/* 
+install("nilord","GGLGL")
+
+pdiscf(f,p) =
+{
+  local(val, fp, ans);
+
+  val=valuation(poldisc(f),p);
+  fp=factormod(f,p)[,1]~;
+  fp = lift(fp[length(fp)]);
+  ans = matdet(nilord(p, f, val, fp, 0));
+  return(val+2*valuation(ans,p));
+}
+
+pdiscf(f, p) = return(valuation(nfdisc(f,,p),p)) 
+pdiscf(f, p) = valuation(nfdisc(f,,[p;valuation(poldisc(f),p)]~),p) 
+pdiscf(f, p) = return(valuation(nfdisc(f,1),p)) 
+*/
+
+pdiscf(f, p) = return(valuation(nfdisc([f,[p]]),p));
+
+ms(f, p=2) = return(pdiscf(f,p)/poldegree(f));
+
+subdeg(f, m) =
+{
+  local(sbs);
+  sbs = nfsubfields(f,m);
+  return(vector(length(sbs),h,sbs[h][1]));
+}
+
+sqfree(num) =
+{
+  local(fnum);
+  fnum=factor(num);
+  prod(j=1,#fnum[,1], fnum[j,1]^(fnum[j,2] % 2))
+}
+
+tw(epol,d) = local(a);a=roo(epol);a=subst(a,x,x^2/d)*d^poldegree(a)
+
+roo(pol) =
+{
+  local(d);
+  d=poldegree(pol)/2;
+  sum(j=0,d,polcoeff(pol,2*j)*x^j)
+}
+
+dpoly(pol) =
+{
+  local(res);
+  res=polresultant(pol,subst(pol,x,x+y))/y^poldegree(pol);
+  roo(subst(res,y,x))
+}
+
+dpolysep(pol) =
+{
+  local(p1,p2);
+  p1=pol;
+  while(issquarefree(p2=dpoly(p1))==0, p1=poltschirnhaus(pol));
+  return(p2);
+}
+
+polclose(p1, p2) =
+{
+  local(c);
+  c=vector(poldegree(p1)+1, h, polcoeff(p1,h-1)-polcoeff(p2, h-1));
+  return(norml2(c));
+}
+
+cleanpol(p1) =
+{
+  local(p2,pc);
+  p2=round(real(p1));
+  pc=polclose(p1,p2);
+  if(pc>0.00001, print("Closeness is ", pc));
+  return(p2);
+}
+
+/* resolvent for r1+r2+r3 */
+tpolybasic(pol) =
+{
+  local(rts, ans=1);
+  rts=polroots(pol);
+  for(j=1,length(rts)-2,for(k=j+1,length(rts)-1,for(l=k+1,length(rts),
+    ans *= x-rts[j]-rts[k]-rts[l])));
+  return(cleanpol(ans));
+}
+
+tpoly(pol) =
+{
+  local(p1,p2);
+  p1=pol;
+  while(issquarefree(p2=tpolybasic(p1))==0, p1=poltschirnhaus(pol));
+  return(p2);
+}
+
+septwin(pol)=
+{
+  local(tpf);
+  tpf=factor(tpoly(pol))[,1];
+  return(polredabs(seldeg(tpf,7)[1]));
+}
+
+slopeave(p, tame, wlist) =
+{
+  ((p-1) * sum(j=1,length(wlist),wlist[j]*p^(j-1))+
+    (tame-1)/tame)/p^length(wlist)
+  }
+
+frob1(pol, p) = 
+{
+  local(fd);
+  fd = factormod(pol, p,1)[,1]~;
+  fd = - vecsort(-fd);  /* To sort big to small */
+  return(fd);
+}
+
+seefrobs2(pol1, pol2, bnd=10) =
+{
+  local(cnt=0, p=0,df, fd1, fd2, flist=[], clist=[], k, mx=0);
+  df= poldisc(pol1)*poldisc(pol2);
+  while(cnt<bnd,
+   p=nextprime(p+1);
+   if(df%p != 0,
+     cnt++;
+     fd1=fact2num(frob1(pol1,p));
+     fd2=fact2num(frob1(pol2,p));
+     print1("p = ", p);
+     space(3-length(Str(p)));
+     space(6-length(fd1));
+     print1(fd1);
+     space(8-length(fd2)); 
+     print(fd2);
+   );
+  )
+}
+
+frobs2(pol1, pol2, bnd=10000) =
+{
+  local(cnt=0, p=0,df, fd, flist=[], clist=[], k, mx1=0, mx2=0,cx=0);
+  df= poldisc(pol1)*poldisc(pol2);
+  while(cnt<bnd,
+   p=nextprime(p+1);
+   if(df%p != 0,
+     cnt++;
+     fd=[fact2num(frob1(pol1,p)), fact2num(frob1(pol2,p))];
+     k=assoc(fd, flist);
+     if(k>0, clist[k] += 1, clist=concat(clist, [1]); flist=concat(flist,[fd]));
+   ));
+  fd = vecsort(clist, , 5);
+  clist = vecextract(clist, fd);
+  flist = vecextract(flist, fd);
+  /* Get lengths for formating */
+  for(k=1,#clist, 
+    mx1 = max(mx1, length(Str(flist[k][1])));
+    mx2 = max(mx2, length(Str(flist[k][2])));
+    cx = max(cx, length(Str(clist[k])));
+  );
+  for(k=1,#clist,
+    print1(flist[k][1]);
+    space(2+mx1-length(Str(flist[k][1])));
+    print1(flist[k][2]);
+    space(2+mx2-length(Str(flist[k][2])));
+    space(cx-length(Str(clist[k])));
+    print(clist[k]);
+  )
+}
+
+frobs3(pol1, pol2, pol3, bnd=10000) =
+{
+  local(cnt=0, p=0,df, fd, flist=[], clist=[], k, mx1=0, mx2=0,mx3=0,cx=0);
+  df= poldisc(pol1)*poldisc(pol2)*poldisc(pol3);
+  while(cnt<bnd,
+   p=nextprime(p+1);
+   if(df%p != 0,
+     cnt++;
+     fd=[fact2num(frob1(pol1,p)), fact2num(frob1(pol2,p)), fact2num(frob1(pol3,p))];
+     k=assoc(fd, flist);
+     if(k>0, clist[k] += 1, clist=concat(clist, [1]); flist=concat(flist,[fd]));
+   ));
+  fd = vecsort(clist, , 5);
+  clist = vecextract(clist, fd);
+  flist = vecextract(flist, fd);
+  /* Get lengths for formating */
+  for(k=1,#clist, 
+    mx1 = max(mx1, length(Str(flist[k][1])));
+    mx2 = max(mx2, length(Str(flist[k][2])));
+    mx3 = max(mx3, length(Str(flist[k][3])));
+    cx = max(cx, length(Str(clist[k])));
+  );
+  for(k=1,#clist,
+    print1(flist[k][1]);
+    space(2+mx1-length(Str(flist[k][1])));
+    print1(flist[k][2]);
+    space(2+mx2-length(Str(flist[k][2])));
+    print1(flist[k][3]);
+    space(2+mx2-length(Str(flist[k][3])));
+    space(cx-length(Str(clist[k])));
+    print(clist[k]);
+  )
+}
+
+frobs(pol, bnd, verbose=1) =
+{
+  local(cnt=0, p=0,df, fd, flist=[], clist=[], k, mx=0);
+  df = poldisc(pol);
+  while(cnt<bnd,
+   p=nextprime(p+1);
+   if(df%p != 0,
+     cnt++;
+     fd = factormod(pol, p,1)[,1]~;
+     fd = - vecsort(-fd);  /* To sort big to small */
+     k=assoc(fd, flist);
+     if(k>0, clist[k] += 1, clist=concat(clist, [1]); flist=concat(flist,[fd]));
+   ));
+  fd = vecsort(clist, , 1);
+  clist = vecextract(clist, fd);
+  flist = vecextract(flist, fd);
+  if(poldegree(pol)<10, flist=facts2num(flist));
+  mx=length(flist[1]);
+  for(j=2,length(flist), mx=max(mx, length(flist[j])));
+  if(verbose, 
+	  print();
+		for(j=1,length(flist),
+			print1(flist[j]);
+			space(mx-length(flist[j])+2);
+			print(clist[j]));
+		print();
+	);
+  vector(length(clist),h, [clist[h], eval(flist[h])])
+}
+
+seefrobs(pol, bnd) =
+{
+  local(cnt=0, p=0,df, fd, flist=[], clist=[], k, mx=0);
+  df = poldisc(pol);
+  while(cnt<bnd,
+   p=nextprime(p+1);
+   if(df%p != 0,
+     cnt++;
+     fd = factormod(pol, p);
+     fd = lift(fd[,1]~);
+     mx = vector(length(fd), h, -poldegree(fd[h]));
+     mx = vecsort(mx);
+     mx = -mx;
+     mx = fact2num(mx);
+     print("p = ", p, ", pat is ", mx, ",   ", fd)
+   ));
+}
+
+space(n) = for(j=1,n,print1(" "))
+
+fact2num(lis) = local(m=0); for(j=1,length(lis), m=m*10+lis[j]); Str(m)
+
+facts2num(lis) = vector(length(lis),h, fact2num(lis[h]))
+
+/* Minkowski bound */
+mink(r,s,d) = 
+{
+  my(n=r+2*s,nf);
+  if(d==0, nf=nfinit(r);r=nf.r1;s=nf.r2;d=nf.disc; n=r+2*s);
+  return(sqrt(abs(d))*(4/Pi)^s * (n)!/n^n);
+}
+
+splittingfield(f) = return(extern(Str("magmagp \"DefiningPolynomial(SplittingField("f"))\"")));
+res(f,n) = return(extern(Str("magmagp \"res("f","n")\"")));
+classno(f) = return(extern(Str("magmagp \"ClassNumber(NumberField("f"))\"")));
+reg(f) = return(extern(Str("magmagp \"Regulator(NumberField("f"))\"")));
+hreg(f) = return(extern(Str("magmagp \"nf:=NumberField("f");h:=ClassNumber(nf);r:=Regulator(nf);return(<h,r>)\"")));
