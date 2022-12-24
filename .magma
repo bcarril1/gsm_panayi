@@ -1,0 +1,1016 @@
+Attach("+IdealsNF.m");
+AttachSpec("/home/carrillo/pAdic Gal/spec");
+AttachSpec("/home/carrillo/ExactpAdics2/spec");
+AttachSpec("/home/carrillo/pAdic Gal/spec_ExactpAdics");
+Z:=Integers();
+
+Q:=Rationals();
+
+PR := PolynomialRing;
+
+RFF := RationalFunctionField;
+
+CD := CremonaDatabase;
+
+B := Booleans();
+
+R<x> := PR(Z);
+
+tg := TransitiveGroup;
+
+C<I>:=ComplexField(1000);
+RealPoly<x>:=PolynomialRing(C);
+Rx<x>:=PolynomialRing(Rationals());
+Ry<y>:=PolynomialRing(C);
+Rz<z>:=PolynomialRing(C);
+Rxy<x1,x2>:=PolynomialRing(Rationals(),2);
+
+procedure see(li)
+  
+for j in li do
+    
+	print j;
+  
+end for;
+
+end procedure;
+
+
+
+
+
+
+
+
+
+
+
+
+
+function res(f,n)
+  
+G,r,S := GaloisGroup(f);
+  
+order := Order(G)/n;
+  
+if order in Integers() then
+    
+	order := Integers() ! order;
+    
+	ss:= Subgroups(G : OrderEqual:=order);
+    
+	return(<R ! DefiningPolynomial(NumberField( GaloisSubgroup(S, z`subgroup))) : z in ss>);
+  
+else
+    return <>;
+  
+end if;
+
+end function;
+
+
+function res3(f,n)
+  
+G,r,S := GaloisGroup(f);
+  
+order := Order(G)/n;
+  
+if order in Integers() then
+	list:=[];
+	order := Integers() ! order;
+    
+	ss:= Subgroups(G : OrderEqual:=order);
+	sss:=Subgroups(G:OrderMultipleOf:=order);
+    
+	for s1 in ss do
+		list1:=[];
+		for s2 in sss do
+			con:=Conjugates(G,s2`subgroup);
+			for c1 in con do
+				if (s1`subgroup subset c1) then
+				Append(~list1,R!DefiningPolynomial(NumberField( GaloisSubgroup(S, c1))));
+				end if;
+			end for;
+		end for;
+		Append(~list,list1);
+	end for;
+	return(list);
+  
+else
+    return <>;
+  
+end if;
+
+end function;
+
+
+
+
+function pgalt(f,p,prec)
+PGG_UseExactpAdicsFactorization();
+PGG_UseExactpAdicsRoots();
+
+Qp:=pAdicField(p,prec);
+R<x>:=PolynomialRing(Qp);
+
+f:=R!f;
+G := PGG_GaloisGroup(f : Alg:="ARM[Global[RamTower[Symmetric]],All[FactorDegrees,Index]]");
+t:=TransitiveGroupIdentification(G);
+  
+return t;
+
+end function;
+
+
+function exactpgalt(f,p)
+R<x>:=PolynomialRing(ExactpAdicField(p));
+
+f:=R!f;
+G := PGG_GaloisGroup(f : Alg:="ARM[Global[RamTower[Symmetric]],All[FactorDegrees,Index]]");
+t:=TransitiveGroupIdentification(G);
+  
+return t;
+
+end function;
+
+
+function galt(f)
+ 
+G := GaloisGroup(f);
+  
+t:=TransitiveGroupIdentification(G);
+  
+return t;
+
+end function;
+
+
+
+function galtord(f)
+  
+G := GaloisGroup(f);
+  
+return Order(G);
+
+end function;
+
+
+
+function exportgp(cmd)
+  
+foo := eval(cmd);
+  
+return "xyzzy\n" cat Sprint(foo) cat "\nscoobydoobydoo\n";
+
+end function;
+
+
+function subgroups(n,d)
+G:=TransitiveGroup(n,d);
+list:=[];
+for l in SubgroupClasses(G) do
+	Append(~list,Order(G)/l`order);
+end for;
+return Sort(list);
+end function;
+
+
+function subgroups(n,d)
+G:=TransitiveGroup(n,d);
+list:=[];
+for l in SubgroupClasses(G) do
+	Append(~list,Order(G)/l`order);
+end for;
+return Sort(list);
+end function;
+
+
+function inertiamatch(f,g,u)
+OpenSmallGroupDatabase();
+G,r,S:=GaloisGroup(f);
+order := Order(G)/u;
+
+if order in Integers() then
+    
+	order := Integers() ! order;
+    
+	ss:= Subgroups(G : OrderEqual:=order);
+    
+
+	for z in ss do
+
+	if  g eq R ! DefiningPolynomial(NumberField( GaloisSubgroup(S, z`subgroup))) then
+		H:=z`subgroup;
+
+		if IsTransitive(H) then
+			d,n:=TransitiveGroupIdentification(H);
+		return([Order(H),1,n,d]);
+
+		else	
+
+	
+			V:=IdentifyGroup(H);
+			return([Order(H),0,V[1],V[2]]);
+
+		end if;
+	end if;
+	end for;
+	
+
+
+else
+    return <>;
+  
+end if;
+
+
+
+end function;
+
+
+
+
+function inertiamatch2(f,u)
+OpenSmallGroupDatabase();
+G,r,S:=GaloisGroup(f);
+order := Order(G)/u;
+
+if order in Integers() then
+    
+	order := Integers() ! order;
+    
+	ss:= Subgroups(G : OrderEqual:=order);
+    
+
+	list:=[];
+	for z in ss do
+		 g := R ! DefiningPolynomial(NumberField( GaloisSubgroup(S, z`subgroup)));
+	
+		H:=z`subgroup;
+		if IsTransitive(H) then
+			d,n:=TransitiveGroupIdentification(H);
+		Append(~list,[g,Order(H),1,n,d]);
+
+		else	
+
+	
+			V:=IdentifyGroup(H);
+			Append(~list,[g,Order(H),0,V[1],V[2]]);
+
+		end if;
+	
+	end for;
+return(list);	
+
+else
+    return <>;
+  
+end if;
+
+
+
+end function;
+
+
+
+
+function newlars(expon, list, f,ell)
+
+k:=NumberField(f);
+Z_k:=MaximalOrder(k);
+P:=1*Z_k;
+for j in list do
+if j eq ell then 
+		power:=expon;
+	else
+		power:=1;
+	end if;
+
+	temp:=Decomposition(Z_k,j);
+
+	for k in temp do
+		P:=P*k[1]^power;
+	end for;
+
+end for;
+L:=[P];
+ LA:=[];
+ for i in L do
+ "Now doing: ", i;
+ R, mR:= RayClassGroup(i);
+ I:=Subgroups(R:Quot:=[ell]);
+ "with ", #I, "possible subgroups";
+ for j in I do
+_,mq:=quo<R|j`subgroup>;
+ A:=AbelianExtension(Inverse(mq)*mR);
+if Conductor(A) ne i then continue; end if;
+Append(~LA,A);
+end for;
+end for;
+"number of fields:", #LA;
+return LA;
+end function;
+
+function cleanup(var)
+E:=EquationOrder(var);
+K:=NumberField(E);
+K:=AbsoluteField(K);
+h:=DefiningPolynomial(K);
+return(h);
+end function;
+
+function newlars2(expon,list,f,ell)
+listtemp:=newlars(expon,list,f,ell);
+
+temp:=[];
+for e in listtemp do
+Append(~temp,cleanup(e));
+end for;
+
+return temp;
+end function;
+
+
+
+subgrps:=function(gi,N1,temp,p)
+list:=[];
+list1:=[];
+for n1 in N1 do
+	if n1 subset gi and (IsElementaryAbelian(gi/n1) or #gi eq 1) then 
+		if #n1 eq 1 then 
+			Append(~list,temp);
+		else
+			list:=list cat $$(n1,N1,Append(temp,n1),p);;
+		end if;
+	end if;
+end for;
+
+
+return list;
+end function;
+
+/* Computes all possible Galois Slope Content structure for nTd extension of Q_p */
+galgroups:=   function(n,d,p,flag)
+	G:=TransitiveGroup(n,d);
+	list:=[];
+	if IsSolvable(G) then
+		N:=NormalSubgroups(G);
+		N1:=[];
+		/* Creating a list of Normal p-subgroups of G*/
+		for n in N do
+			if (#Factorization(n`order) eq 1 and Factorization(n`order)[1][1] eq p) or n`order eq 1 then
+				Append(~N1,n`subgroup);
+			end if;
+		end for;
+
+		for g0 in N do
+			/* Checking if g0 can arise as an inertia subgroup, i.e. semi-direct product of cyclic group and normal p-subgroup */ 
+			if IsSolvable(g0`subgroup) and IsCyclic(G/g0`subgroup) then
+				found:=false;
+				N3:=NormalSubgroups(g0`subgroup);
+				for q in N3 do
+					if q`order eq p^(Valuation(g0`order,p)) and IsCyclic((g0`subgroup)/(q`subgroup)) then 
+						found:=true;
+					end if;
+				end for;
+
+
+				if found then
+					for g1 in N1 do
+						if g1 subset g0`subgroup and IsCyclic(g0`subgroup/g1) and IsDivisibleBy(p^(#(G/g0`subgroup))-1,#(g0`subgroup/g1)) then
+							temp:=[G,g0`subgroup,g1];
+							list:=list cat subgrps(g1,N1,temp,p);
+						end if;
+					end for;
+				end if;
+			end if;
+		end for;
+	else	
+		"Galois Group is non-Solvable";
+	end if;
+
+	
+	
+	if flag eq 0 then
+
+	list1:=[];
+	for i:=1 to #list do
+		list2:=[];
+		for j:=1 to 2 do
+			Append(~list2,#list[i][j]/#list[i][j+1]);
+		end for;
+		for j:=3 to #list[i]-1 do
+			Append(~list2,Valuation(#list[i][j]/#list[i][j+1],p));
+		end for;
+
+		Append(~list2,Valuation(#list[i][#list[i]],p));
+		list3:=[];
+		list3:=[[list2[2],list2[1]]];
+		list4:=[];
+		for j:=3 to #list2 do
+		list4:=list4 cat [j-2:p in [1..list2[j]]];
+		end for;
+		list2:=list3 cat [list4];
+		Append(~list1,list2);
+	end for;
+
+	list:=list1;
+	end if;
+	
+
+
+	return list;
+end function;
+
+
+
+
+function newlars4(limit,expon, list, f,ell)
+
+k:=NumberField(f);
+Z_k:=MaximalOrder(k);
+P:=1*Z_k;
+for j in list do
+if j eq ell then 
+		power:=expon;
+	else
+		power:=1;
+	end if;
+
+	temp:=Decomposition(Z_k,j);
+
+	for k in temp do
+		P:=P*k[1]^power;
+	end for;
+
+end for;
+L:=[P];
+ LA:=[];
+ for i in L do
+ "Now doing: ", i;
+ R, mR:= RayClassGroup(i);
+ I:=Subgroups(R:Quot:=[ell]);
+ "with ", #I, "possible subgroups";
+count:=0;
+ for j in I do
+count:=count+1;
+_,mq:=quo<R|j`subgroup>;
+ A:=AbelianExtension(Inverse(mq)*mR);
+if count gt limit then continue; end if;
+if Conductor(A) ne i then continue; end if;
+Append(~LA,A);
+end for;
+end for;
+"number of fields:", #LA;
+return LA;
+end function;
+
+function Factors(f,p,prec)
+fact:=pAdicFactors(R!f,p,prec);
+list:=[];
+	for k in fact do
+		Append(~list,Degree(k));
+	end for;
+return Sort(list);
+end function;
+		
+function Factorsgal(f,size,p,prec)
+fact:=pAdicFactors(R!res(f,size)[1],p,prec);
+list:=[];
+	for k in fact do
+		Append(~list,Degree(k));
+	end for;
+return Sort(list);
+end function;
+
+function pdisc2(f,p)
+a,b:=pDiscriminant(R!f,p);
+return b;
+end function;
+
+function pdiscgal(f,size,p)
+a,b:=pDiscriminant(R!res(f,size)[1],p);
+return b;
+end function;
+
+function sublist(nlower,dlower,nupper,dupper)
+
+A:=TransitiveGroup(nlower,dlower);  
+B:=TransitiveGroup(nupper,dupper);  
+
+W1:=WreathProduct(SymmetricGroup(nupper),A);
+W2:=WreathProduct(B,A);
+
+
+found:=0;
+ T:=W1;
+ list:=[T];
+while found eq 0 do
+ Q:=MaximalSubgroups(T);
+found1:=0;
+for i in [1..#Q] do
+ if W2 subset Q[#Q+1-i]`subgroup then
+ if W2 eq Q[#Q+1-i]`subgroup then
+found:=1;
+ end if;
+if found1 eq 0 then
+Append(~list,Q[#Q+1-i]`subgroup);
+found1:=1;
+ T:=Q[#Q+1-i]`subgroup;
+ end if;
+end if;
+ end for;
+ end while;
+
+return list;
+
+end function;
+
+
+function invslist(nlower,dlower,nupper,dupper)
+
+A:=TransitiveGroup(nlower,dlower);  
+B:=TransitiveGroup(nupper,dupper);  
+
+W1:=WreathProduct(SymmetricGroup(nupper),A);
+W2:=WreathProduct(B,A);
+
+found:=0;
+ T:=W1;
+ list:=[T];
+while found eq 0 do
+ Q:=MaximalSubgroups(T);
+found1:=0;
+for i in [1..#Q] do
+ if W2 subset Q[#Q+1-i]`subgroup then
+ if W2 eq Q[#Q+1-i]`subgroup then
+found:=1;
+ end if;
+if found1 eq 0 then
+Append(~list,Q[#Q+1-i]`subgroup);
+found1:=1;
+ T:=Q[#Q+1-i]`subgroup;
+ end if;
+end if;
+ end for;
+ end while;
+
+list1:=[];
+for i in [1..#list-1] do
+Append(~list1,GaloisGroupInvariant(list[i],list[i+1]));
+end for;
+
+return list1;
+end function;
+
+
+
+function permslist(n1,d1,n2,d2)
+
+A:=TransitiveGroup(n1,d1);  
+B:=TransitiveGroup(n2,d2);  
+
+W1:=WreathProduct(SymmetricGroup(n2),A);
+W2:=WreathProduct(B,A);
+
+found:=0;
+ T:=W1;
+ list:=[T];
+while found eq 0 do
+ Q:=MaximalSubgroups(T);
+found1:=0;
+for i in [1..#Q] do
+ if W2 subset Q[#Q+1-i]`subgroup then
+ if W2 eq Q[#Q+1-i]`subgroup then
+found:=1;
+ end if;
+if found1 eq 0 then
+Append(~list,Q[#Q+1-i]`subgroup);
+found1:=1;
+ T:=Q[#Q+1-i]`subgroup;
+ end if;
+end if;
+ end for;
+ end while;
+
+Tlist:=[];
+for i in [1..#list-1] do
+Append(~Tlist,Transversal(list[i],list[i+1]));
+end for;
+
+list2:=[];
+for T in Tlist do
+temp:=[];
+for t in T do
+temp1:=[];
+for i in [1..9] do
+Append(~temp1,i^(t));
+end for;
+Append(~temp,temp1);
+end for;
+Append(~list2,temp);
+end for;
+
+return list2;
+end function;
+
+
+function cubicroots(a,prec)
+
+C<I>:=ComplexField(prec);
+RealPoly<x>:=PolynomialRing(C);
+
+Rts:=Roots(RealPoly!CyclotomicPolynomial(3));
+rts:=[];
+
+for r in Rts do
+Append(~rts, r[1]);
+end for;
+
+
+u1:=a+rts[1]-1/rts[1];
+u2:=a-(rts[1]-1/rts[1]);
+
+temp:=u2/u1;
+tha:=temp^(1/3);
+
+list:=[tha+1/tha];
+
+Append(~list,tha*rts[1]+1/(tha*rts[1]));
+Append(~list,tha*rts[2]+1/(tha*rts[2]));
+
+return list;
+
+end function;
+
+
+
+
+function quinticroots(a,b,prec)
+
+C<I>:=ComplexField(prec);
+RealPoly<x>:=PolynomialRing(C);
+
+Rts:=Roots(RealPoly!CyclotomicPolynomial(5));
+rts:=[];
+
+
+for r in Rts do
+Append(~rts, r[1]);
+end for;
+
+u1:=a + ((rts[1]^3 + rts[1]^2)*b + 2*rts[1]); 
+u2:=a + ((rts[1]^6 + rts[1]^4)*b + 2*rts[1]^2); 
+u3:=a + ((rts[1]^12 + rts[1]^8)*b + 2*rts[1]^4);  
+u4:=a + ((rts[1]^24 + rts[1]^16)*b + 2*rts[1]^8);
+
+beta:=(u3^2*u4/(u1^2*u2))^(1/5);
+
+alpha:=beta+1/beta+u1/u3*beta^2+ 1/(u1/u3*beta^2);
+alpha1:=(beta*rts[1])+1/(beta*rts[1])+u1/u3*(beta*rts[1])^2+ 1/(u1/u3*(beta*rts[1])^2);
+alpha2:=(beta*rts[1]^2)+1/(beta*rts[1]^2)+u1/u3*(beta*rts[1]^2)^2+ 1/(u1/u3*(beta*rts[1]^2)^2);
+alpha3:=(beta*rts[1]^3)+1/(beta*rts[1]^3)+u1/u3*(beta*rts[1]^3)^2+ 1/(u1/u3*(beta*rts[1]^3)^2);
+alpha4:=(beta*rts[1]^4)+1/(beta*rts[1]^4)+u1/u3*(beta*rts[1]^4)^2+ 1/(u1/u3*(beta*rts[1]^4)^2);
+
+
+return [alpha,alpha1,alpha2,alpha3,alpha4];
+
+end function;
+
+
+
+function septicroots(a,b,c,prec)
+
+C<I>:=ComplexField(prec);
+RealPoly<x>:=PolynomialRing(C);
+
+Rts:=Roots(RealPoly!CyclotomicPolynomial(7));
+rts:=[];
+
+
+for r in Rts do
+Append(~rts, r[1]);
+end for;
+
+u1:=(rts[1]^5 + rts[1]^2 + 2)*a + ((rts[1]^4 + rts[1]^3 - 1)*b + (2*rts[1] + c)); 
+u2:=(-rts[1]^5 - rts[1]^4 - rts[1]^3 - rts[1]^2 + 1)*a + ((rts[1]^5 + rts[1]^2 - 1)*b + (2*rts[1]^3 + c));
+u3:=(rts[1]^4 + rts[1]^3 + 2)*a + ((-rts[1]^5 - rts[1]^4 - rts[1]^3 - rts[1]^2 - 2)*b + (2*rts[1]^2 + c));  
+u4:=(rts[1]^5 + rts[1]^2 + 2)*a + ((rts[1]^4 + rts[1]^3 - 1)*b + (-2*rts[1]^5 - 2*rts[1]^4 - 2*rts[1]^3 - 2*rts[1]^2 - 2*rts[1] + (c - 2)));
+u5:=(-rts[1]^5 - rts[1]^4 - rts[1]^3 - rts[1]^2 + 1)*a + ((rts[1]^5 + rts[1]^2 - 1)*b + (2*rts[1]^4 + c));
+u6:=(rts[1]^4 + rts[1]^3 + 2)*a + ((-rts[1]^5 - rts[1]^4 - rts[1]^3 - rts[1]^2 - 2)*b + (2*rts[1]^5 + c));
+
+
+
+beta:=(u4^2*u5^3*u6/(u1^2*u2^3*u3))^(1/7);
+
+alpha:=beta+1/beta+(u2*u1/(u5*u4))*beta^2+ 1/((u2*u1/(u5*u4))*beta^2)+(u2*u1/(u5*u4))*beta^3+ 1/((u2*u1/(u5*u4))*beta^3);
+alpha1:=(beta*rts[1])+1/(beta*rts[1])+(u2*u1/(u5*u4))*(beta*rts[1])^2+ 1/((u2*u1/(u5*u4))*(beta*rts[1])^2)+(u2*u1/(u5*u4))*(beta*rts[1])^3+ 1/((u2*u1/(u5*u4))*(beta*rts[1])^3);
+alpha2:=(beta*rts[1]^2)+1/(beta*rts[1]^2)+(u2*u1/(u5*u4))*(beta*rts[1]^2)^2+ 1/((u2*u1/(u5*u4))*(beta*rts[1]^2)^2)+(u2*u1/(u5*u4))*(beta*rts[1]^2)^3+ 1/((u2*u1/(u5*u4))*(beta*rts[1]^2)^3);
+alpha3:=(beta*rts[1]^3)+1/(beta*rts[1]^3)+(u2*u1/(u5*u4))*(beta*rts[1]^3)^2+ 1/((u2*u1/(u5*u4))*(beta*rts[1]^3)^2)+(u2*u1/(u5*u4))*(beta*rts[1]^3)^3+ 1/((u2*u1/(u5*u4))*(beta*rts[1]^3)^3);
+alpha4:=(beta*rts[1]^4)+1/(beta*rts[1]^4)+(u2*u1/(u5*u4))*(beta*rts[1]^4)^2+ 1/((u2*u1/(u5*u4))*(beta*rts[1]^4)^2)+(u2*u1/(u5*u4))*(beta*rts[1]^4)^3+ 1/((u2*u1/(u5*u4))*(beta*rts[1]^4)^3);
+alpha5:=(beta*rts[1]^5)+1/(beta*rts[1]^5)+(u2*u1/(u5*u4))*(beta*rts[1]^5)^2+ 1/((u2*u1/(u5*u4))*(beta*rts[1]^5)^2)+(u2*u1/(u5*u4))*(beta*rts[1]^5)^3+ 1/((u2*u1/(u5*u4))*(beta*rts[1]^5)^3);
+alpha6:=(beta*rts[1]^6)+1/(beta*rts[1]^6)+(u2*u1/(u5*u4))*(beta*rts[1]^6)^2+ 1/((u2*u1/(u5*u4))*(beta*rts[1]^6)^2)+(u2*u1/(u5*u4))*(beta*rts[1]^6)^3+ 1/((u2*u1/(u5*u4))*(beta*rts[1]^6)^3);
+
+
+return [alpha,alpha1,alpha2,alpha3,alpha4,alpha5,alpha6];
+
+end function;
+
+
+
+function tschir(pol)
+Rx<x>:=PolynomialRing(Rationals());
+Rxy<x1,x2>:=PolynomialRing(Rationals(),2);
+pol:=Rx!pol;
+
+found:=0;
+while found eq 0 do
+	holder:=Rx!0;
+
+	for i in [0..3] do
+
+		holder:=holder+Random(10)*x^i;
+		holder:=Rx!holder;
+	end for;
+
+
+	U:=Resultant(MultivariatePolynomial(Rxy,pol,2),x1-MultivariatePolynomial(Rxy,holder,2),x2);
+	U:=UnivariatePolynomial(U);
+	if IsSeparable(U) then  
+		 found:=1;
+	end if;
+
+end while;
+
+return [U,holder];
+
+end function;
+
+
+
+function res1(pol,holder,p,q,prec,a,b,c)
+C<I>:=ComplexField(prec);
+Rx<x>:=PolynomialRing(Rationals());
+Ry<y>:=PolynomialRing(C);
+Rz<z>:=PolynomialRing(C);
+G,rts,s:=GaloisGroup(pol:Type:="Complex",Prec:=prec);
+Cp:=CyclicGroup(p);
+W:=WreathProduct(Cp,G);
+
+S:=Subgroups(W:OrderEqual:=Integers()!(#W/q));
+
+list1:=[];
+
+for r in rts do
+if p eq 3 then list1:=list1 cat cubicroots( Evaluate(Ry!a,r),prec); end if;
+if p eq 5 then list1:=list1 cat quinticroots( Evaluate(Ry!a,r),Evaluate(Ry!b,r),prec); end if;
+if p eq 7 then list1:=list1 cat septicroots( Evaluate(Ry!a,r),Evaluate(Ry!b,r),Evaluate(Ry!c,r),prec); end if;
+end for;
+
+for i in [1..q] do
+
+list1[i]:=Evaluate(holder,list1[i]);
+end for;
+
+list:=[];
+for s in S do
+test:=1;
+inv:=RelativeInvariant(W,s`subgroup);
+T:=Transversal(W,s`subgroup);
+for t in T do
+test:=test*(z-Evaluate(inv^t,list1));
+end for;
+Append(~list,test);
+end for;
+
+list2:=[];
+for l in list do
+g:=0;
+coeff:=Coefficients(l);
+for i in [1..q+1] do
+pol1,cl:=MinimalPolynomial(ChangePrecision(coeff[i],Min(prec,5000)),1);
+coeff1:=Coefficients(pol1);
+
+if #coeff1 eq 2 then
+g:=g-coeff1[1]/coeff1[2]*x^(i-1);
+end if;
+
+if #coeff1 eq 1 then
+g:=g+coeff1[1]*x^(i-1);
+end if;
+
+end for;
+
+Append(~list2,g);
+end for;
+
+return list2;
+end function;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function res2(p,n,d,q)
+  
+A:=CyclicGroup(p);
+B:=TransitiveGroup(n,d);
+W:=WreathProduct(A,B);
+S:=Subgroups(W:OrderEqual:=Integers()!(#W/q));
+
+list:=[];
+for s in S do
+list1:=[];
+a:=RelativeInvariant(W,s`subgroup);
+T:=Transversal(W,s`subgroup);
+for t in T do
+Append(~list1,a^t);
+end for;
+Append(~list,list1);
+end for;
+
+return list;
+
+end function;
+
+function galord(pol,p,q)
+
+G,r,s:=GaloisGroup(pol:Type:="Complex");
+A:=CyclicGroup(p);
+W:=WreathProduct(A,G);
+S:=Subgroups(W:OrderEqual:=Integers()!(#W/q));
+
+list:=[];
+for s in S do
+list1:=[];
+a:=RelativeInvariant(W,s`subgroup);
+T:=Transversal(W,s`subgroup);
+for t in T do
+Append(~list1,a^t);
+end for;
+Append(~list,list1);
+end for;
+
+return list;
+end function;
+
+
+function subfieldstoplot2(f,n,p)
+list:=res3(f,n);
+templist:=[];
+for l1 in list do
+	list1:=[];
+	for l2 in l1 do
+			Append(~list1,[Degree(l2),pdisc2(l2,p)]);
+	end for;
+	Append(~templist,list1);
+end for;
+return(templist);
+  
+
+end function;
+
+
+function quinticroots1(var,prec)
+
+C<I>:=ComplexField(prec);
+RealPoly<x>:=PolynomialRing(C);
+
+Rts:=Roots(RealPoly!CyclotomicPolynomial(5));
+f:=RealPoly!(x^5 + var^2*x^4 + (-2*var^3 - 6*var^2 - 10*var - 10)*x^3 + (var^4 + 5*var^3 + 11*var^2 + 15*var + 5)*x^2 + (var^3 + 4*var^2 + 10*var + 10)*x + 1);
+
+
+t:=Coefficient(f,4)/(Coefficient(f,5)*5);
+f:= Evaluate(f,x-t);
+
+
+a0:=Coefficient(f,5);
+a1:=Coefficient(f,4);
+a2:=Coefficient(f,3);
+a3:=Coefficient(f,2);
+a4:=Coefficient(f,1);
+a5:=Coefficient(f,0);
+
+f10:= x^10 + 3*a2*x^8 + a3*x^7 + (3*a2^2 - 3*a4)*x^6 + (2*a3*a2 - 11*a5)*x^5 + (a2^3 - 2*a4*a2 - a3^2)*x^4 + (a3*a2^2 - 4*a5*a2 - 4*a4*a3)*x^3 + (a4*a2^2 - a3^2*a2 + (7*a5*a3 - 4*a4^2))*x^2 + (-a5*a2^2 + (-a3^3 + 4*a5*a4))*x + (a5*a3*a2 + (-a4*a3^2 - a5^2));
+
+
+f2:=x^5 + (-3/5*var^4 - 3*var^3 - 9*var^2 - 15*var - 15)*x^3 + (2/25*var^6 + 3/5*var^5 + 14/5*var^4 + 8*var^3 + 16*var^2 + 20*var + 15)*x^2 + (12/125*var^8 + 24/25*var^7 + 127/25*var^6 + 89/5*var^5 + 222/5*var^4 + 80*var^3 + 102*var^2 + 85*var + 35)*x + (-72/3125*var^10 - 36/125*var^9 - 238/125*var^8 - 211/25*var^7 - 684/25*var^6 - 336/5*var^5 - 631/5*var^4 - 179*var^3 - 184*var^2 - 125*var - 43);
+
+f1:= x^5 + (-3/5*var^4 - 3*var^3 - 9*var^2 - 15*var - 15)*x^3 + (2/25*var^6 + 3/5*var^5 + 9/5*var^4 + 3*var^3 + var^2 - 5*var - 10)*x^2 + (12/125*var^8 + 24/25*var^7 + 122/25*var^6 + 79/5*var^5 + 177/5*var^4 + 55*var^3 + 57*var^2 + 35*var + 10)*x + (-72/3125*var^10 - 36/125*var^9 - 208/125*var^8 - 146/25*var^7 - 334/25*var^6 - 96/5*var^5 - 61/5*var^4 + 11*var^3 + 31*var^2 + 25*var + 7);
+
+
+e4:=Coefficient(f1+f2,1);
+e5:=Coefficient(f1+f2,0);
+
+d2:=C!(5^(1/2))*Coefficient(f1-f2,3);
+d3:=C!(5^(1/2))*Coefficient(f1-f2,2);
+d4:=C!(5^(1/2))*Coefficient(f1-f2,1);
+d5:=C!(5^(1/2))*Coefficient(f1-f2,0);
+
+
+if AbsoluteValue(d2/2-5*a2/2) lt 0.000001 and AbsoluteValue(125*d5/2+125*e5-25*d3*a2/4-75*d2*a3/4-125*a2*a3/2-375*a5/2) lt 0.000001 then
+d2=-1*d2;
+d3=-1*d3;
+d4=-1*d4;
+d5=-1*d5;
+end if;
+
+h1:=-1*d2/2-5*a2/2;
+h2:=125*d5/2+125*e5-25*d3*a2/4-75*d2*a3/4-125*a2*a3/2-375*a5/2;
+h3:=-5*d3/2-25*a3/2;
+h4:=25*d4/2+15*e4/2-15*d2*a2/2-40*a4-5*a2^2/2;
+
+if AbsoluteValue(h1) lt 0.000001 then 
+u1:=h2^(1/5); 
+u4:=0; 
+d:=h2;
+else
+d:=(h2^2-4*h1^5)^(1/2); 
+u1:=((h2+d)/2)^(1/5); 
+u4:=h1/u1;
+end if;
+
+u2:=(h4*u1^2-h3*u4^3)/d;
+u3:=(h3*u1^3-h4*u4^2)/d;
+w:=(C!(-2*C!(5^(1/2))-10)^(1/2)+C!(5^(1/2))-1)/4;
+
+
+return [-t+(w^3*u1+w*u2+w^4*u3+w^2*u4)/5,-t+(w*u1+w^2*u2+w^3*u3+w^4*u4)/5,-t+(w^4*u1+w^3*u2+w^2*u3+w*u4)/5,-t+(w^2*u1+w^4*u2+w*u3+w^3*u4)/5,-t+(u1+u2+u3+u4)/5];
+
+
+end function;
+
+
+
+function res4(pol,holder,p,q,prec,a,b,c)
+C<I>:=ComplexField(prec);
+Rx<x>:=PolynomialRing(Rationals());
+Ry<y>:=PolynomialRing(C);
+Rz<z>:=PolynomialRing(C);
+G,rts,s:=GaloisGroup(pol:Type:="Complex",Prec:=prec);
+Cp:=CyclicGroup(p);
+W:=WreathProduct(Cp,G);
+
+print rts;
+S:=Subgroups(W:OrderEqual:=Integers()!(#W/q));
+
+list1:=[];
+
+for r in rts do
+if p eq 3 then list1:=list1 cat cubicroots( Evaluate(Ry!a,r),prec); end if;
+if p eq 5 then list1:=list1 cat quinticroots1( Evaluate(Ry!a,r),prec); print Evaluate(Ry!a,r); end if;
+if p eq 7 then list1:=list1 cat septicroots( Evaluate(Ry!a,r),Evaluate(Ry!b,r),Evaluate(Ry!c,r),prec); end if;
+end for;
+
+for i in [1..q] do
+
+list1[i]:=Evaluate(holder,list1[i]);
+end for;
+
+print list1;
+
+list:=[];
+for s in S do
+test:=1;
+inv:=RelativeInvariant(W,s`subgroup);
+T:=Transversal(W,s`subgroup);
+for t in T do
+test:=test*(z-Evaluate(inv^t,list1));
+end for;
+Append(~list,test);
+end for;
+
+print list;
+
+list2:=[];
+for l in list do
+g:=0;
+coeff:=Coefficients(l);
+for i in [1..q+1] do
+pol1,cl:=MinimalPolynomial(ChangePrecision(coeff[i],Min(prec,5000)),1);
+coeff1:=Coefficients(pol1);
+
+if #coeff1 eq 2 then
+g:=g-coeff1[1]/coeff1[2]*x^(i-1);
+end if;
+
+if #coeff1 eq 1 then
+g:=g+coeff1[1]*x^(i-1);
+end if;
+
+end for;
+
+Append(~list2,g);
+end for;
+
+return list2;
+end function;
