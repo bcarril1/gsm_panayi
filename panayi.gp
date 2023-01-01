@@ -1,16 +1,17 @@
-panayi_gen(gen_pol,base_extension,local_extension,p,option) =
+panayi_gen(gen_pol,base_extension,local_extension,p,num_poly,nffactor_padic_prec,option) =
 {
 
 	\\ gen_pol: a generic/parametric polynomial in x and w is the parameter (thus only one parameter allowed in this implementation)
 	\\ base_extension: a Galois splitting model of the base extension in terms of x (assuming that base_extension contains the maximal unramified extension of local_extension)
 	\\ local_extension: to Q_p extension we are trying to find a Galois splitting model
-	\\ Implementation 1: Uses the command polrootsff to find the needed roots modulo the prime ideal above p, 
+	\\ num_poly is the number of potential gsm found before ending search
+	\\ nffactor_padic_prec is the precision of factoring the min poly of unifomizer of base_extension of local extension
+	\\ Uses the command polrootsff to find the needed roots modulo the prime ideal above p, 
 	\\ but method needs polynomials defining unramified/totally ramified parts of the extension. So if g is a polynomial and 
 	\\ not a vector, then the implementation will find polynomials defined unramified/totally ramified parts of the extension and 
 	\\ uses the "option" value to determine on how to find them. 
 	\\ When local_extension is a polynomial and when option is 0 or omitted, then uses a lexiographical ordering to find the polynomial defining unramified part of the extension K  	
 	\\ When local_extension is a polynomial and when option is 1, then the command ffinit to define unramified part of the extension K  		
-
 	\\ NOTE: If local_extension is a vector, then you can ignore the value of "option" (i.e. leave it 0 or omitted).	
 
 	
@@ -30,7 +31,7 @@ panayi_gen(gen_pol,base_extension,local_extension,p,option) =
 	);
 
 	findex = poldegree(unram);
-	\\ building lift of roots finite field
+	\\ building lift of roots of residue field
 	reps = [0];
 	if(poldegree(unram,t)!=1,
 		ff = ffprimroot(ffgen(Mod(1,p)*unram));
@@ -50,7 +51,7 @@ panayi_gen(gen_pol,base_extension,local_extension,p,option) =
 	uniformizer_minpoly = minpoly(Mod(uniformizer,base_extension));
 	uniformizer_base_extension = panayi(uniformizer_minpoly ,[unram,eis] ,p)[2][1];
 	if(uniformizer_base_extension ==0, uniformizer_base_extension =p,
-		uniformizer_base_extension = subst(-1*polcoeff(nffactor_padic(subst(rnfequation(nfinit(unram),eis),y,x),uniformizer_minpoly,p,90)[1],0,x),t,y)
+		uniformizer_base_extension = subst(-1*polcoeff(nffactor_padic(subst(rnfequation(nfinit(unram),lift(eis)),y,x),uniformizer_minpoly,p,nffactor_padic_prec)[1],0,x),t,y);
 		);
 	
 	
@@ -59,39 +60,32 @@ panayi_gen(gen_pol,base_extension,local_extension,p,option) =
 
 	listput(C,[gen_pol,0]);
 
-	while(length(C)!=0&length(Roots)<40,
-
+	while(length(C)!=0&length(Roots)<num_poly,
 		for(i=1,length(C),
 			c=C[1][1];
 			param_apx = C[1][2];
 
 			listpop(C,1);
-	
+			\\ checking if we need to calc next round of the parameter's p-adic digit otherwise find phi_#
 			pol_sharp_list = polsharp_gen([c,param_apx],eis,unram,invy,eindex,p,uniformizer_base_extension,reps);
-			
-			
-			\\breakpoint();
 			if(length(pol_sharp_list)==1,
 				
 			
 				c=pol_sharp_list[1][1]; 
 				param_apx=pol_sharp_list[1][2];
 
+				\\ checking if phi_bar is a degree one polynomial and add it to output list 
 				if(poldegree(Mod(subst(c,y,0),p),x)==1,m=m+1; listput(Roots,param_apx));
 											
 				if(poldegree(Mod(subst(c,y,0),p),x)>1,
-
-
-					if(poldegree(Mod(subst(c,y,0),p),w)>0,C= concat(C,extend_generic_poly_parameter(c,uniformizer_base_extension ,reps));,
-						\\ Polynomials are removed in front of the list and inserted at the end of the list
-						R=polrootsff(lift(lift(Mod(subst(c,y,0),p)))*x/x,p,unram);
-						for(j=1,length(R),
-							h=subst(c,x,y*x+lift(lift(R[j])));
-							h=lift(Mod(lift(Mod(h,eis)),unram));
-							
-							listput(C,[h,param_apx]);
-					
-						);
+					\\ Finding roots and preceding with algorithm
+					R=polrootsff(lift(lift(Mod(subst(c,y,0),p)))*x/x,p,unram);
+					for(j=1,length(R),
+						h=subst(c,x,y*x+lift(lift(R[j])));
+						h=lift(Mod(lift(Mod(h,eis)),unram));
+						
+						listput(C,[h,param_apx]);
+				
 					);
 				);
 				,for(i=1,length(pol_sharp_list), listput(C,pol_sharp_list[i]));
@@ -99,42 +93,43 @@ panayi_gen(gen_pol,base_extension,local_extension,p,option) =
 		);
 		y_power = y_power+1;
 	); 
+	\\ Correctly formating parameter values
 	Roots = Set(apply(q->pretty_root(q,y) ,apply(z->z[2..length(z)],Roots)));
-	
-	
-	
-return([Roots,uniformizer_minpoly,unram]);
+	unram_subfields = nfsubfields(nfinit(uniformizer_minpoly),poldegree(unram,t))[1];
+	unram_gsm = select(z->valuation(nfdisc(z),p)==0,unram_subfields);
+
+return([Roots,uniformizer_minpoly,unram_gsm[1]]);
 };
 
 
+\\ cleans up panayi_gen output, finds polys over Q[x] and parameters values in terms of base_extension gsm
 panayi_clean_up(Roots1,uniformizer_minpoly1,unram1,gen_poly)={
 \\ base_extension = x case
 if(poldegree(unram1,t)==1 & poldegree(uniformizer_minpoly1,y)==1,
-	temp_roots = apply(z->lift(Mod(z,uniformizer_minpoly1)),Roots1);
-	temp_roots = apply(z->lift(Mod(z,unram1)),temp_roots);
-	temp_roots = apply(z->subst(gen_poly,w,z),temp_roots);
+	temp_roots = apply(z->[lift(Mod(z,uniformizer_minpoly1)),z],Roots1);
+	temp_roots = apply(z->[lift(Mod(z[1],unram1)),z[2]],temp_roots);
+	temp_roots = apply(z->[subst(gen_poly,w,z[1]),z[2]],temp_roots);
 	return(temp_roots));
 	
 if(poldegree(unram1,t)>1 & poldegree(uniformizer_minpoly1,y)==1,
 	temp_roots = apply(z->lift(Mod(z,uniformizer_minpoly1)),Roots1);
 	temp_roots = apply(z->subst(z,t,y),temp_roots);
-	temp_roots = apply(z->rnfequation(nfinit(subst(unram1,t,y)),subst(gen_poly,w,z)),temp_roots);
+	temp_roots = apply(z->[rnfequation(nfinit(subst(unram1,t,y)),subst(gen_poly,w,z)),z],temp_roots);
 	
 	
 	return(temp_roots));	
 	
 if(poldegree(unram1,t)==1 & poldegree(uniformizer_minpoly1,y)>1,
 	temp_roots = apply(z->lift(Mod(z,unram1)),Roots1);
-	temp_roots = apply(z->rnfequation(nfinit(subst(uniformizer_minpoly1,t,y)),subst(gen_poly,w,z)),temp_roots);
+	temp_roots = apply(z->[rnfequation(nfinit(subst(uniformizer_minpoly1,t,y)),subst(gen_poly,w,z)),z],temp_roots);
 	
 	
 	return(temp_roots));
 
 if(poldegree(unram1,t)>1 & poldegree(uniformizer_minpoly1,y)>1,
-
 	unram_in_terms_of_y = subst(nfisincl(unram1,uniformizer_minpoly1)[1],x,y);
 	temp_roots = apply(z->subst(z,t,unram_in_terms_of_y),Roots1);
-	temp_roots = apply(z->rnfequation(nfinit(subst(uniformizer_minpoly1,t,y)),subst(gen_poly,w,z)),temp_roots);
+	temp_roots = apply(z->[rnfequation(nfinit(subst(uniformizer_minpoly1,t,y)),subst(gen_poly,w,z)),z],temp_roots);
 	
 	
 	return(temp_roots));
@@ -164,11 +159,6 @@ poly_list = apply(z->gcd(A,Mod(subst(z,x,x+k*t),unram_temp)),poly_list);
 poly_list = apply(z->z/polcoeff(z,poldegree(z),x),poly_list);
 poly_list = apply(z->lift(lift(z)),poly_list);
 
-\\ R=gcd(A,Mod(subst(M[1,1],x,x+k*t),unram_temp));	
-\\ R=R/polcoeff(R,poldegree(R),x);
-\\ eis=lift(subst(lift(R),x,y));
-\\ return(eis)
-
 return(poly_list);
 }
 
@@ -180,13 +170,16 @@ pretty_root(list,uniformizer_base_extension)={
 }
 
 
-\\ Extends the parameter of a generic polynomial out one spot
+\\ Extends the parameter of a generic polynomial out one p-adic digit
 extend_generic_poly_parameter(f,uniformizer_base_extension ,reps)={
 	return(apply(z->[subst(f[1],w,z+uniformizer_base_extension*w),concat(f[2],z)],reps));
 };
 
 \\ Valuation of a poly in terms of w (with respect to y)
 ufval_fi(fi,eis,eindex,p)={
+	\\ if pol coeff is 0
+	if(fi==0,return(skip));
+
 	\\ valuation of coeffs of w
 	val_w_coeffs = apply(z->ufval_element(polcoef(fi,z,w),eis,eindex,p),[1..poldegree(fi,w)]);
 	val_w_coeffs = concat(val_w_coeffs,+oo);
@@ -195,6 +188,10 @@ ufval_fi(fi,eis,eindex,p)={
 	val_const_coeffs = apply(z->ufval_element(polcoef(fi,z,w),eis,eindex,p),[0]);
 	val_const_coeffs = concat(val_const_coeffs, +oo);
 
+	\\ if constant coeff of fi in terms of w is 0
+	if(polcoef(fi,0,w)==0,return(vecmin(val_w_coeffs)+least));
+
+	\\ if min valuation of constant coeff of fi is less that the rest, returns that value otherwise +oo
 	if(vecmin(val_const_coeffs )<vecmin(val_w_coeffs ),return(vecmin(val_const_coeffs )),return(+oo));
 
 }
@@ -202,7 +199,27 @@ ufval_fi(fi,eis,eindex,p)={
 \\ valution of gen poly
 ufval_gen_poly(f,eis,eindex,p)={
 	val_coeffs = apply(z->ufval_fi(polcoef(f,z,x),eis,eindex,p),[0..poldegree(f,x)]);
-	if(vecsum(apply(z->z==+oo,val_coeffs))>0, return(+oo),return(vecmin(val_coeffs)));
+	val_coeffs = select(z->z!=skip,val_coeffs);
+
+	\\ if 0 is in val coeffs return +oo
+	if(vecsum(apply(z->z==+oo,val_coeffs))>0, return(+oo));
+	
+	\\ getting confirmed values of coeffs
+	val_coeffs_confirmed = select(z->(poldegree(z,least)==0)||(z==0),val_coeffs);
+	
+	\\ getting values of coeffs what is not yet confirmed (depends on value of parameter)
+	val_coeffs_at_least = select(z->poldegree(z,least)>0,val_coeffs);
+	val_coeffs_at_least = apply(z->polcoef(z,0,least),val_coeffs_at_least);
+
+	\\ no unsure values, returns min valuations
+	if(#val_coeffs_at_least==0,return(vecmin(val_coeffs_confirmed)));
+
+	\\ no confirmed values, return +oo
+	if(#val_coeffs_confirmed==0,return(+oo));
+
+	\\ if min val of confirmed coeffs is less than min val of unsure values return min val of comfirmed coeffs otherwise return +oo
+	if(vecmin(val_coeffs_confirmed)<vecmin(val_coeffs_at_least),return(vecmin(val_coeffs_confirmed)),return(+oo)  );
+
 }
 
 
@@ -210,6 +227,8 @@ polsharp_gen(f,eis,unram,invy,eindex,p,uniformizer_base_extension,reps)={
 	local(n,v,h);
 	h=lift(Mod(lift(Mod(f[1],eis)),unram));
 	v=ufval_gen_poly(h,eis,eindex,p);
+
+	\\if ufval_gen_poly is +oo extend p-adic digit but one otherwise find phi_sharp 
 	if(v==+oo,return(extend_generic_poly_parameter([h,f[2]],uniformizer_base_extension ,reps)),return([[lift(Mod(lift(Mod(h*invy^(v),eis)),unram)),f[2]]] ));
 };
 
